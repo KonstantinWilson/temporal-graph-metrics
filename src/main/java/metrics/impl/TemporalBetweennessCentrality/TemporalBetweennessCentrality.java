@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class TemporalBetweennessCentrality implements IMetric<Double> {
     private GradoopId vertexId;
     private List<TemporalVertex> vertices;
+    private Double result = null;
 
     /**
      *
@@ -51,14 +52,12 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                     Tuple2<Long, Long> result = determine(edges, sourceVertex.getId(), targetVertex.getId());
                     if (result.f1 != 0) {
                         f2 += result.f0.doubleValue() / result.f1.doubleValue();
-                        System.out.println(result.toString());
                     }
                 }
             }
         }
-        System.out.println("f1 = " + f1);
-        System.out.println("f2 = " + f2);
-        System.out.println("f1 * f2 = " + f1 * f2);
+
+        result = new Double(f1 * f2);
     }
 
     private Tuple2<Long, Long> determine(List<TemporalEdge> edges, GradoopId startId, GradoopId endId) {
@@ -154,7 +153,14 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
 
     @Override
     public DiagramV2<Long, Double> getData() {
-        return null;
+        if (result == null) {
+            return null;
+        }
+        else {
+            DiagramV2 diagram = new DiagramV2(null);
+            diagram.insertMin(0, 1, result);
+            return  diagram;
+        }
     }
 
     private void determine() {
