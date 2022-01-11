@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="CSVImporter" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="ALTERNATIVE_JRE_PATH" value="openjdk-15" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="importing.CSVImporter" />
+    <module name="TemporalMetrics" />
+    <option name="PROGRAM_PARAMETERS" value="C:\Users\Konstantin\Downloads\201306-citibike-tripdata\201306-citibike-tripdata.csv" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

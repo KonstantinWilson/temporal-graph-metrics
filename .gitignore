@@ -1,0 +1,22 @@
+# Libraries
+lib/*
+
+# Eclipse
+.classpath
+.project
+.settings/
+ 
+# Intellij
+*.iml
+*.iws
+.idea/shelf/
+.idea/workspace.xml
+.idea/tasks.xml
+
+ 
+# Mac
+.DS_Store
+ 
+# Maven
+log/
+target/
