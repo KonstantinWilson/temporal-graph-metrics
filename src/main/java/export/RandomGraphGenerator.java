@@ -3,6 +3,9 @@ package export;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 
+/**
+ * @deprecated
+ */
 public class RandomGraphGenerator {
     public final String[] vertices = {
             "A",
