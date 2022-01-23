@@ -1,5 +1,10 @@
 package basics.diagram;
 
+/**
+ * @deprecated
+ * @param <X>
+ * @param <Y>
+ */
 public class DataLine<X extends Comparable, Y extends Comparable> {
     private X from;
     private boolean fromInclusive;

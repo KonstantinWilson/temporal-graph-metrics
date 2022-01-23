@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ImageExporter<X extends Number & Comparable, Y extends Number & Comparable> {
     private BufferedImage image;

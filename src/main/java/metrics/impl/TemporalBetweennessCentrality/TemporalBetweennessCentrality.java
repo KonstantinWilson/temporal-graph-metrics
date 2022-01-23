@@ -1,6 +1,5 @@
 package metrics.impl.TemporalBetweennessCentrality;
 
-import basics.ComparableObject;
 import basics.StackItem;
 import basics.diagram.DiagramV2;
 import metrics.api.IMetric;

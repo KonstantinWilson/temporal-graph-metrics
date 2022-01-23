@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated
+ * @param <X>
+ * @param <Y>
+ */
 public class Diagram<X extends Number & Comparable, Y extends Number & Comparable> {
     private ArrayList<DataLine<X, Y>> data;
 
