@@ -2,7 +2,6 @@ package ui;
 
 import basics.diagram.DiagramV2;
 import export.ImageExporter;
-import export.RandomGraphGenerator;
 import importing.CSVImporter;
 import importing.TestDataImporter;
 import importing.api.IImporter;
@@ -12,17 +11,17 @@ import metrics.impl.TemporalBetweennessCentrality.TemporalBetweennessCentrality;
 import metrics.impl.TemporalConnectedness.TemporalConnectedness;
 import metrics.impl.TemporalShortestPath.TemporalShortestPath;
 import org.apache.commons.cli.*;
-import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.temporal.model.impl.TemporalGraph;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 import org.gradoop.temporal.model.impl.pojo.TemporalVertex;
 import processor.TemporalGraphProcessor;
-import processor.api.IMetricProcessor;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Console/Terminal user interface
+ */
 public class UserInterface {
     private IImporter importer = null;
     private IMetric metric = null;
@@ -32,6 +31,11 @@ public class UserInterface {
 
     }
 
+    /**
+     * Loads a csv file for processing.
+     * @param filepath Path and name of the file.
+     * @throws Exception
+     */
     public void loadFile(String filepath) throws Exception {
         File file = null;
         try {
@@ -45,26 +49,49 @@ public class UserInterface {
         this.importer = csvImporter;
     }
 
+    /**
+     * Loads the test graph.
+     */
     public void loadTestData() {
         this.importer = new TestDataImporter();
     }
 
+    /**
+     * Gets the vertex with a specific label.
+     * @param label Label of the vertex to return.
+     * @return vertex of type TemporalVertex
+     */
     public TemporalVertex getVertex(String label) {
         return this.importer.getVertices().stream().filter(v -> v.getLabel().equals(label)).findFirst().get();
     }
 
+    /**
+     * Sets the metric to process.
+     * @param metric Metric of type IMetric
+     */
     public void setMetric(IMetric metric) {
         this.metric = metric;
     }
 
+    /**
+     * Gets the vertices of the imported graph.
+     * @return List of TemporalVertices
+     */
     public List<TemporalVertex> getVertices() {
         return importer.getVertices();
     }
 
+    /**
+     * Gets the edges of the imported graph.
+     * @return List of TemporalEdges
+     */
     public List<TemporalEdge> getEdges() {
         return importer.getEdges();
     }
 
+    /**
+     * Processes the metric.
+     */
     public void process() {
         if (metric == null) {
             return;
@@ -74,10 +101,18 @@ public class UserInterface {
         this.processor.process(this.importer.getEdges());
     }
 
+    /**
+     * Gets the processed result.
+     * @return result as DiagramV2
+     */
     public DiagramV2 getData() {
         return processor.getData();
     }
 
+    /**
+     * Main class. Entry point.
+     * @param args
+     */
     public static void main(String[] args) {
         UserInterface ui = new UserInterface();
 
@@ -183,6 +218,13 @@ public class UserInterface {
         }
     }
 
+    /**
+     * Reads a string from the console's input.
+     * @param message Message to display before input.
+     * @param minLength Minimum length of the string that should be input.
+     * @param untilValid Repeat input prompt until the input is valid.
+     * @return String input
+     */
     public static String readString(String message, int minLength, boolean untilValid) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String input = null;
@@ -197,6 +239,12 @@ public class UserInterface {
         return input;
     }
 
+    /**
+     * Reads an integer from the console's input.
+     * @param message Message to display before input.
+     * @param untilValid Repeat input prompt until the input is valid.
+     * @return Integer input
+     */
     public static Integer readInt(String message, boolean untilValid) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Integer i = null;
@@ -210,9 +258,5 @@ public class UserInterface {
             }
         } while (untilValid && i == null);
         return i;
-    }
-
-    public static TemporalGraph loadBikeGraph() {
-        return null;
     }
 }
