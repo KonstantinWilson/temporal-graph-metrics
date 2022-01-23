@@ -10,10 +10,16 @@ import org.gradoop.temporal.model.impl.pojo.TemporalVertexFactory;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+/**
+ * Importer that creates a predefined test graph.
+ */
 public class TestDataImporter implements IImporter {
     private ArrayList<TemporalVertex> vertices;
     private ArrayList<TemporalEdge> edges;
 
+    /**
+     * Constructor for TestDataImporter
+     */
     public TestDataImporter() {
         createGraph();
     }
@@ -28,6 +34,13 @@ public class TestDataImporter implements IImporter {
         return vertices;
     }
 
+    /**
+     * Gets a vertex from the vertex list, if it exists, creates and adds it, if it doesn't.
+     * @param factory
+     * @param id Id of the vertex
+     * @param label Label of the vertex
+     * @return Id of the vertex as GradoopId
+     */
     private GradoopId addOrGetVertex(TemporalVertexFactory factory, long id, String label) {
         TemporalVertex vertex = vertices.stream().filter(e -> e.getPropertyValue("id").getLong() == id).findFirst().orElse(null);
         if (vertex == null) {
@@ -39,6 +52,15 @@ public class TestDataImporter implements IImporter {
         return vertex.getId();
     }
 
+    /**
+     * Adds an edge to the edge list.
+     * @param factory
+     * @param label Label of the edge
+     * @param sourceVertexId Id of the origin vertex
+     * @param targetVertexId Id of the destination vertex
+     * @param validFrom Time, from which the edge exists
+     * @param validTo Time, until which the edge exists
+     */
     private void addEdge(TemporalEdgeFactory factory, String label, GradoopId sourceVertexId, GradoopId targetVertexId, long validFrom, long validTo) {
         TemporalEdge edge = factory.createEdge(label, sourceVertexId, targetVertexId);
         edge.setValidFrom(validFrom);
@@ -47,6 +69,9 @@ public class TestDataImporter implements IImporter {
         this.edges.add(edge);
     }
 
+    /**
+     * Generates the test graph.
+     */
     private void createGraph() {
         vertices = new ArrayList<>();
         edges = new ArrayList<>();
@@ -110,6 +135,16 @@ public class TestDataImporter implements IImporter {
         addEdge(vertexFactory, edgeFactory, "Edge 50", "G", "B", 8, 46);
     }
 
+    /**
+     * Adds an edge to the edge list.
+     * @param vFactory VertexFactory
+     * @param eFactory EdgeFactory
+     * @param eLabel Label of the edge
+     * @param fromId Id of the origin vertex
+     * @param toId Id of the destination vertex
+     * @param validFrom Time, from which the edge exists
+     * @param validTo Time, until which the edge exists
+     */
     private void addEdge(TemporalVertexFactory vFactory, TemporalEdgeFactory eFactory, String eLabel, int fromId, int toId, long validFrom, long validTo) {
         String[] vLabels = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
         this.addEdge(
@@ -122,6 +157,16 @@ public class TestDataImporter implements IImporter {
         );
     }
 
+    /**
+     * Adds an edge to the edge list.
+     * @param vFactory VertexFactory
+     * @param eFactory EdgeFactory
+     * @param eLabel Label of the edge
+     * @param fromLabel Label of the origin vertex
+     * @param toLabel Label of the destination vertex
+     * @param validFrom Time, from which the edge exists
+     * @param validTo Time, until which the edge exists
+     */
     private void addEdge(TemporalVertexFactory vFactory, TemporalEdgeFactory eFactory, String eLabel, String fromLabel, String toLabel, long validFrom, long validTo) {
         TreeMap<String, Long> labelToId = new TreeMap<>();
         labelToId.put("A", new Long(1));

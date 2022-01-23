@@ -1,26 +1,16 @@
 package importing;
 
 import importing.api.IImporter;
-import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.common.model.api.entities.GraphHead;
-import org.gradoop.common.model.impl.id.GradoopId;
-import org.gradoop.flink.model.api.layouts.LogicalGraphLayout;
-import org.gradoop.flink.model.api.layouts.LogicalGraphLayoutFactory;
-import org.gradoop.temporal.model.impl.TemporalGraph;
-import org.gradoop.temporal.model.impl.TemporalGraphFactory;
-import org.gradoop.temporal.model.impl.layout.TemporalGraphLayoutFactory;
 import org.gradoop.temporal.model.impl.pojo.*;
-import org.gradoop.temporal.util.TemporalGradoopConfig;
-import scala.Int;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
+/**
+ * Importer for csv-files.
+ */
 public class CSVImporter implements IImporter {
     public static final int TRIP_DURATION = 0;
     public static final int START_TIME = 1;
@@ -50,6 +40,10 @@ public class CSVImporter implements IImporter {
     private TemporalVertexFactory vertexFactory = new TemporalVertexFactory();
     private TemporalEdgeFactory edgeFactory = new TemporalEdgeFactory();
 
+    /**
+     * Reads the content of a file.
+     * @param file File to read
+     */
     public void load(File file) {
         try {
             reader = new BufferedReader(new FileReader(file));
@@ -78,38 +72,21 @@ public class CSVImporter implements IImporter {
         }
     }
 
-//    public TemporalGraph getGraph() {
-//        System.out.println("getGraph() 1");
-//        System.out.println("this.edges.size() = " + this.edges.size());
-//        ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-//
-//        TemporalGraphHead graphHead = new TemporalGraphHeadFactory().createGraphHead();
-//        TemporalGraph graph = new TemporalGraphFactory(TemporalGradoopConfig.createConfig(env)).fromCollections(graphHead, this.vertices, this.edges);
-//        System.out.println("getGraph() 2");
-//        try {
-//            DataSet<TemporalEdge> edges = graph.getEdges();
-//            ArrayList<Tuple2<Integer, String>> tuples = new ArrayList<>();
-//            tuples.add(new Tuple2<>(1, "eins"));
-//            tuples.add(new Tuple2<>(2, "zwei"));
-//            tuples.add(new Tuple2<>(3, "drei"));
-//            DataSet<Tuple2<Integer, String>> newDS = env.fromCollection(tuples);
-//            System.out.println("newDS.count() = " + newDS.count());
-//        } catch (Exception e) {
-//            System.out.println("Could not count: " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//        System.out.println("getGraph() 3");
-//        return graph;
-//    }
-
+    @Override
     public ArrayList<TemporalVertex> getVertices() {
         return this.vertices;
     }
 
+    @Override
     public ArrayList<TemporalEdge> getEdges() {
         return this.edges;
     }
 
+    /**
+     * Parses the header of the cvs file.
+     * @param line header line
+     * @param delim delimiter of columns
+     */
     private void parseHeader(String line, String delim) {
         String[] fragments = line.split(delim);
         for (int i = 0; i < fragments.length; i++) {
@@ -117,6 +94,11 @@ public class CSVImporter implements IImporter {
         }
     }
 
+    /**
+     * Parses a non-header line of a cvs file.
+     * @param line non-header line
+     * @param delim delimiter of columns
+     */
     private void parseLine(String line, String delim) {
         String[] fragments = line.split(delim);
         if (fragments[START_STATION_ID].contains("NULL") || fragments[END_STATION_ID].contains("NULL")) {
@@ -226,6 +208,10 @@ public class CSVImporter implements IImporter {
         }
     }
 
+    /**
+     * Main class for testing.
+     * @param args
+     */
     public static void main(String[] args) {
         PrintStream Console = System.out;
 
