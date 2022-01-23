@@ -15,12 +15,21 @@ import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the Temporal Shortest Path from "Graph Metrics for Temporal Networks" by Vincenzo Nicosia et. al.
+ * The Temporal Shortest Path is the path with overlapping edges from on vertex to another with the shortest temporal length. The amount of hops is irellevant.
+ */
 public class TemporalShortestPath implements IMetric<ComparableObject<Long, List<TemporalEdge>>> {
     private GradoopId startId;
     private GradoopId endId;
     private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
     private DiagramV2<Long, ComparableObject<Long, List<TemporalEdge>>> diagram = new DiagramV2<>(null);
 
+    /**
+     * Constructor of TemporalShortestPath
+     * @param startId Id of the origin vertex
+     * @param endId Id of the destination vertex
+     */
     public TemporalShortestPath(GradoopId startId, GradoopId endId) {
         this.startId = startId;
         this.endId = endId;
@@ -42,6 +51,11 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         return diagram;
     }
 
+    /**
+     * Selects edges that overlap with 'edge'.
+     * @param edge
+     * @return List of TemporalEdges
+     */
     private List<TemporalEdge> selectRelevantEdges(TemporalEdge edge) {
         List<TemporalEdge> filtered = oldEdges.stream().filter(o ->
                 o.getValidFrom() < edge.getValidTo() && o.getValidTo() > edge.getValidFrom()).collect(Collectors.toList());
@@ -49,9 +63,11 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         return filtered;
     }
 
+    /**
+     * Determines the TemporalShortestPath from a given list of edges. Stores the results in a diagram.
+     * @param edges List of TemporalEdges
+     */
     private void determine(List<TemporalEdge> edges) {
-        int count = 0;
-
         Stack<StackItem<TemporalEdge>> stack = new Stack<>();
         Stack<TemporalEdge> path = new Stack<>();
         Stack<GradoopId> edgePath = new Stack<>();
@@ -61,21 +77,10 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         edgePath.push(path.peek().getSourceId());
         edgePath.push(path.peek().getTargetId());
 
-        int lastIndex = -1;
-        int firstSize = stack.peek().size();
         while (stack.size() > 0) {
-            if (stack.size() == 1) {
-                lastIndex = stack.peek().getIndex();
-            }
-            System.out.print(lastIndex + "/" + firstSize  + " - " + stack.size() + "                                                                                \r");
-
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
                 if (path.peek().getTargetId().equals(endId)) {
-                    // Found result
-                    //System.out.println("GEFUNDEN!");
-                    //System.out.println(path.stream().map(v -> v.getLabel()).collect(Collectors.toList()));
                     Tuple2<Long, Long> trimmed = trim(path);
-                    //System.out.println(trimmed);
                     if (trimmed.f0 < trimmed.f1) {
                         diagram.insertMin(
                                 trimmed.f0,
@@ -99,8 +104,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
                                     && e.getValidTo() > from
                                     && !edgePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
-                    /*System.out.println("nextSteps.size() = " + nextSteps.size());
-                    System.out.println("lastId = " + lastEdge.getTargetId());*/
+
                     if (nextSteps == null || nextSteps.size() <= 0) {
                         path.pop();
                         edgePath.pop();
@@ -144,6 +148,11 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         }
     }
 
+    /**
+     * Determines the timeframe in which a stack of edges occurs.
+     * @param stack Stack of edges
+     * @return Tuple with two Longs. The first number is the start time and the second number is the end time.
+     */
     private Tuple2<Long, Long> trim(Stack<TemporalEdge> stack) {
         long start = 0, end = 0;
         boolean init = true;

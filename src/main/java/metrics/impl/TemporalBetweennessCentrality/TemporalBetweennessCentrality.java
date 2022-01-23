@@ -15,13 +15,18 @@ import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the Temporal Betweenness Centrality from "Graph Metrics for Temporal Networks" by Vincenzo Nicosia et. al.
+ * The Temporal Betweenness Centrality says, how traversed a vertex is.
+ * TBC = 1 / ((amountOfVertices-1) * (amountOfVertices-2)) * SUM( (amountOfShortestPaths(j,k) / amountOfShortestPathsThroughVertex(j,k)d) )
+ */
 public class TemporalBetweennessCentrality implements IMetric<Double> {
     private GradoopId vertexId;
     private List<TemporalVertex> vertices;
     private Double result = null;
 
     /**
-     *
+     * Constructor of TemporalBetweennessCentrality
      * @param vertices All vertices of the graph.
      * @param vertexId Id of vertex, for which the metric shall be determined.
      */
@@ -32,7 +37,7 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
 
     @Override
     public void calculate(TemporalEdge edge) {
-
+        // TODO Implement edge-by-edge/streaming calculation.
     }
 
     // 1 / ((N-1)*(N-2)) * SUMME(Anzahl kürzester Pfade/Anzahl kürzester Pfade durch Knoten)
@@ -60,6 +65,13 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
         result = new Double(f1 * f2);
     }
 
+    /**
+     * Determines the Shortest Paths between two vertices.
+     * @param edges Edges which shall be used to find the shortest paths.
+     * @param startId Id of the origin vertex
+     * @param endId Id of the destination vertex
+     * @return Touple with two Long. The first number is the amount of shortest paths not traversing through vertexId. The second number is the amount of shortest paths traversing through vertexId.
+     */
     private Tuple2<Long, Long> determine(List<TemporalEdge> edges, GradoopId startId, GradoopId endId) {
         Tuple2<Long, Long> frac = new Tuple2<>(new Long(0), new Long(0));
 
@@ -161,9 +173,5 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
             diagram.insertMin(0, 1, result);
             return  diagram;
         }
-    }
-
-    private void determine() {
-
     }
 }

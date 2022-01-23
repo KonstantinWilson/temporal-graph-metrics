@@ -12,12 +12,21 @@ import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the Temporal Connectedness from "Graph Metrics for Temporal Networks" by Vincenzo Nicosia et. al.
+ * Two vertices j and k are Temporally Connected, if there is a path from j to k with no overlapping edges and one edge occurs before the next one.
+ */
 public class TemporalConnectedness implements IMetric<Short> {
     private GradoopId startId;
     private GradoopId endId;
     private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
     private DiagramV2<Long, Short> diagram = new DiagramV2<Long, Short>((short)0);
 
+    /**
+     * Constructor of TemporalConnectedness
+     * @param startId Id of the origin vertex
+     * @param endId Id of the destination vertex
+     */
     public TemporalConnectedness(GradoopId startId, GradoopId endId) {
         this.startId = startId;
         this.endId = endId;
@@ -38,12 +47,21 @@ public class TemporalConnectedness implements IMetric<Short> {
         return this.diagram;
     }
 
+    /**
+     * Selects edges that don't overlap with 'edge'.
+     * @param edge
+     * @return List of TemporalEdges
+     */
     private List<TemporalEdge> selectRelevantEdges(TemporalEdge edge) {
         List<TemporalEdge> filtered = oldEdges.stream().filter(o -> o.getValidFrom() > edge.getValidTo() || o.getValidTo() < edge.getValidFrom()).collect(Collectors.toList());
         filtered.add(edge);
         return filtered;
     }
 
+    /**
+     * Determines the TemporalConnectedness from a given list of edges. Stores the results in a diagram.
+     * @param edges List of TemporalEdges
+     */
     private void determine(List<TemporalEdge> edges) {
         Stack<StackItem<TemporalEdge>> stack = new Stack();
         Stack<TemporalEdge> path = new Stack();

@@ -10,12 +10,21 @@ import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the temporalized Hop Count from "Classification of graph metrics" by Javier Martín Hernández and Piet Van Mieghem.
+ * The Hop Count is the lowest amount of hops to travel from a vertex j to another vertex k.
+ */
 public class HopCount implements IMetric<Integer> {
     private GradoopId startId;
     private GradoopId endId;
     private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
     private DiagramV2<Long, Integer> diagram = new DiagramV2<>(null);
 
+    /**
+     * Constructor of Hop Count
+     * @param startId Id of the origin vertex.
+     * @param endId Id of the destination vertex.
+     */
     public HopCount(GradoopId startId, GradoopId endId) {
         this.startId = startId;
         this.endId = endId;
@@ -30,7 +39,7 @@ public class HopCount implements IMetric<Integer> {
     @Override
     public void calculate(List<TemporalEdge> edges) {
         this.diagram = new DiagramV2<>(null);
-        getHopCounts(edges);
+        determine(edges);
     }
 
     @Override
@@ -38,19 +47,31 @@ public class HopCount implements IMetric<Integer> {
         return this.diagram;
     }
 
+    /**
+     * Selects edges in timespan of 'edge' and determines the Hop Count with the new edge.
+     * @param edge New edge to add
+     */
     private void determineHopCounts(TemporalEdge edge) {
         List<TemporalEdge> edgesInTime = getEdgesBetween(edge.getValidFrom(), edge.getValidTo());
         edgesInTime.add(edge);
-        getHopCounts(edgesInTime);
+        determine(edgesInTime);
     }
 
+    /**
+     * Returns all edges that are valid between 'start' and 'end' time. Overlaps are included.
+     * @param start Valid from time
+     * @param end Valid to time
+     * @return List of edges
+     */
     private List<TemporalEdge> getEdgesBetween(Long start, Long end) {
         return this.oldEdges.stream().filter(e -> e.getValidFrom() >= start && e.getValidTo() <= end).collect(Collectors.toList());
     }
 
-    private int getHopCounts(List<TemporalEdge> edges) {
-        int count = 0;
-
+    /**
+     * Determines the Hop Counts between the vertices 'startId' and 'endId'. Stores the result in a Diagram.
+     * @param edges List of edges to work with
+     */
+    private void determine(List<TemporalEdge> edges) {
         Stack<StackItem<TemporalEdge>> stack = new Stack<>();
         Stack<TemporalEdge> path = new Stack<>();
         Stack<GradoopId> edgePath = new Stack<>();
@@ -66,15 +87,10 @@ public class HopCount implements IMetric<Integer> {
             if (stack.size() == 1) {
                 lastIndex = stack.peek().getIndex();
             }
-            System.out.print(lastIndex + "/" + firstSize  + " - " + stack.size() + "                                                                                \r");
 
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
                 if (path.peek().getTargetId().equals(endId)) {
-                    // Found result
-                    //System.out.println("GEFUNDEN!");
-                    //System.out.println(path.stream().map(v -> v.getLabel()).collect(Collectors.toList()));
                     Tuple2<Long, Long> trimmed = trim(path);
-                    //System.out.println(trimmed);
                     if (trimmed.f0 < trimmed.f1) {
                         diagram.insertMin(trimmed.f0, trimmed.f1, path.size());
                     }
@@ -94,8 +110,7 @@ public class HopCount implements IMetric<Integer> {
                             && e.getValidTo() > from
                             && !edgePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
-                    /*System.out.println("nextSteps.size() = " + nextSteps.size());
-                    System.out.println("lastId = " + lastEdge.getTargetId());*/
+
                     if (nextSteps == null || nextSteps.size() <= 0) {
                         path.pop();
                         edgePath.pop();
@@ -137,10 +152,13 @@ public class HopCount implements IMetric<Integer> {
                 }
             }
         }
-
-        return count;
     }
 
+    /**
+     * Determines the timeframe in which a stack of edges occurs.
+     * @param stack Stack of edges
+     * @return Tuple with two Longs. The first number is the start time and the second number is the end time.
+     */
     private Tuple2<Long, Long> trim(Stack<TemporalEdge> stack) {
         long start = 0, end = 0;
         boolean init = true;
