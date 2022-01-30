@@ -1,14 +1,11 @@
 package export;
 
-import basics.diagram.DataLine;
-import basics.diagram.Diagram;
 import basics.diagram.DiagramV2;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -55,20 +52,6 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
     }
 
     /**
-     * @deprecated
-     * @param diagram
-     */
-    public void draw(Diagram<X, Y> diagram) {
-        this.image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        this.graphics = (Graphics2D)image.getGraphics();
-        retrieveExtremes(diagram);
-
-        clear();
-        drawCS();
-        drawContent(diagram);
-    }
-
-    /**
      * Renders a DiagramV2
      * @param diagram
      */
@@ -102,24 +85,6 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
         catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * @deprecated
-     * @param diagram
-     */
-    private void retrieveExtremes(Diagram<X, Y> diagram) {
-        if (diagram == null || diagram.getData() == null || diagram.getData().size() == 0) {
-            return;
-        }
-        ArrayList<DataLine<X, Y>> data = diagram.getData();
-
-        diagramXMin = data.stream().map(DataLine::getFrom).min(Comparable::compareTo).get();
-        diagramXMax = data.stream().map(DataLine::getTo).max(Comparable::compareTo).get();
-        diagramWidth = diagramXMax.longValue() - diagramXMin.longValue();
-        diagramYMin = data.stream().map(DataLine::getValue).min(Comparable::compareTo).get();
-        diagramYMax = data.stream().map(DataLine::getValue).max(Comparable::compareTo).get();
-        diagramHeight = diagramYMax.longValue() - diagramYMin.longValue();
     }
 
     /**
@@ -169,26 +134,6 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
         // Label X
         graphics.drawString(diagramXMax + "", x(maxContentX), y(-margin));
         graphics.drawString(diagramXMin + "", x(0), y(-margin));
-    }
-
-    /**
-     * @deprecated
-     * @param diagram
-     */
-    private void drawContent(Diagram<X, Y> diagram) {
-        double segmentSizeX = (double)maxContentX / (double)diagramWidth;
-        double segmentSizeY = (double)maxContentY / (double)diagramHeight;
-
-        graphics.setColor(Color.RED);
-        for (DataLine<X, Y> line : diagram.getData()) {
-            int y = (int)Math.round((line.getValue().doubleValue() - diagramYMin.doubleValue()) * segmentSizeY);
-            drawLine(
-                    (int)Math.round((line.getFrom().doubleValue() - diagramXMin.doubleValue()) * segmentSizeX),
-                    y,
-                    (int)Math.round((line.getTo().doubleValue() - diagramXMin.doubleValue()) * segmentSizeX),
-                    y
-            );
-        }
     }
 
     /**
