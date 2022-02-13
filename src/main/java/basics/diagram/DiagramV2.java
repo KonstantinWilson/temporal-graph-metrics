@@ -36,6 +36,13 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
      * @param newValue The new value to insert.
      */
     public void insertMin(X from, X to, Y newValue) {
+        if (from.equals(to)) {
+            throw new IllegalArgumentException("'from' and 'to' can't have the same value.");
+        }
+        if (from.compareTo(to) > 0) {
+            throw new IllegalArgumentException("'from' can't be greater than 'to'.");
+        }
+
         if (data.size() <= 0 || data.lastKey().compareTo(from) < 0 || data.firstKey().compareTo(to) > 0) {
             data.put(from, newValue);
             data.put(to, defaultValue);
@@ -84,6 +91,9 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
                             }
                             data.put(to, value);
                         }
+                        else if (value == null || newValue.compareTo(value) == 0) {
+                            data.remove(key);
+                        }
                     }
                     else if (key.compareTo(from) > 0 && key.compareTo(to) < 0) { // Mitte
                         Y value = data.get(key);
@@ -112,6 +122,13 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
      * @param newValue The new value to insert.
      */
     public void insertMax(X from, X to, Y newValue) {
+        if (from.equals(to)) {
+            throw new IllegalArgumentException("'from' and 'to' can't have the same value.");
+        }
+        if (from.compareTo(to) > 0) {
+            throw new IllegalArgumentException("'from' can't be greater than 'to'.");
+        }
+
         if (data.size() <= 0 || data.lastKey().compareTo(from) < 0 || data.firstKey().compareTo(to) > 0) {
             data.put(from, newValue);
             data.put(to, defaultValue);
@@ -159,6 +176,9 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
                                 data.put(key, newValue);
                             }
                             data.put(to, value);
+                        }
+                        else if (value == null || newValue.compareTo(value) == 0) {
+                            data.remove(key);
                         }
                     }
                     else if (key.compareTo(from) > 0 && key.compareTo(to) < 0) { // Mitte
