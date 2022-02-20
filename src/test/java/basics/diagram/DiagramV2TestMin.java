@@ -142,6 +142,25 @@ public class DiagramV2TestMin {
     }
 
     /**
+     * [---[===2===)---)
+     */
+    @Test
+    public void testInsertSameInside() {
+        DiagramV2<Long, Integer> diagram = new DiagramV2<>(null);
+        diagram.insertMin(3L, 10L, 2);
+        diagram.insertMin(5L, 8L, 2);
+
+        TreeMap<Long, Integer> data = diagram.getData();
+
+        int expectedSize = 2;
+        if (data.size() != expectedSize) {
+            fail("Size should be " + expectedSize + " but is " + data.size());
+        }
+        assertEquals("Y at X=3 should be 2.", new Integer(2), data.get(3L));
+        assertNull("Y at X=10 should be null.", data.get(10L));
+    }
+
+    /**
      *      [---3---)
      * [===2============)
      */
@@ -180,6 +199,25 @@ public class DiagramV2TestMin {
         assertEquals("Y at X=3 should be 3.", new Integer(3), data.get(3L));
         assertEquals("Y at X=5 should be 2.", new Integer(2), data.get(5L));
         assertEquals("Y at X=8 should be 3.", new Integer(3), data.get(8L));
+        assertNull("Y at X=10 should be null.", data.get(10L));
+    }
+
+    /**
+     * [===[---2---)===)
+     */
+    @Test
+    public void testInsertSameAround() {
+        DiagramV2<Long, Integer> diagram = new DiagramV2<>(null);
+        diagram.insertMin(5L, 8L, 2);
+        diagram.insertMin(3L, 10L, 2);
+
+        TreeMap<Long, Integer> data = diagram.getData();
+
+        int expectedSize = 2;
+        if (data.size() != expectedSize) {
+            fail("Size should be " + expectedSize + " but is " + data.size());
+        }
+        assertEquals("Y at X=3 should be 2.", new Integer(2), data.get(3L));
         assertNull("Y at X=10 should be null.", data.get(10L));
     }
 

@@ -97,7 +97,7 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
                     }
                     else if (key.compareTo(from) > 0 && key.compareTo(to) < 0) { // Mitte
                         Y value = data.get(key);
-                        if (value == null || newValue.compareTo(value) < 0) {
+                        if (value == null || newValue.compareTo(value) <= 0) {
                             if (lastValue == newValue) {
                                 data.remove(key);
                             }
@@ -183,7 +183,7 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
                     }
                     else if (key.compareTo(from) > 0 && key.compareTo(to) < 0) { // Mitte
                         Y value = data.get(key);
-                        if (value == null || newValue.compareTo(value) > 0) {
+                        if (value == null || newValue.compareTo(value) >= 0) {
                             if (lastValue == newValue) {
                                 data.remove(key);
                             }

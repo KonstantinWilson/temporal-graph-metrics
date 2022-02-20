@@ -88,9 +88,6 @@ public class TemporalConnectedness implements IMetric<Short> {
 
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
                 if (path.peek().getTargetId().equals(endId)) {
-                    System.out.println("GEFUNDEN!");
-                    System.out.println(path);
-
                     diagram.insertMax(path.get(0).getValidFrom(), path.peek().getValidTo(), (short)1);
 
                     path.pop();
