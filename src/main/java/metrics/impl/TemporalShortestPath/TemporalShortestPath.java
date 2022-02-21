@@ -31,6 +31,10 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
      * @param endId Id of the destination vertex
      */
     public TemporalShortestPath(GradoopId startId, GradoopId endId) {
+        if (startId.equals(endId)) {
+            throw new IllegalArgumentException("Start and end id cannot be the same.");
+        }
+
         this.startId = startId;
         this.endId = endId;
     }
@@ -85,7 +89,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
                         diagram.insertMin(
                                 trimmed.f0,
                                 trimmed.f1,
-                                new ComparableObject<>(trimmed.f1 - trimmed.f0, path)
+                                new ComparableObject<Long, List<TemporalEdge>>(trimmed.f1 - trimmed.f0, new ArrayList<TemporalEdge>(path))
                         );
                     }
 

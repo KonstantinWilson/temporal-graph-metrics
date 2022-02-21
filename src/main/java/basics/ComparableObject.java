@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * @param <N> Type of the key
  * @param <O> Type of the object
  */
-public class ComparableObject<N extends Number & Comparable, O extends Object> implements Comparable<N> {
+public class ComparableObject<N extends Number & Comparable, O extends Object> implements Comparable<ComparableObject<N, O>> {
     private N number;
     private O object;
 
@@ -22,8 +22,8 @@ public class ComparableObject<N extends Number & Comparable, O extends Object> i
     }
 
     @Override
-    public int compareTo(N n) {
-        return this.number.compareTo(n);
+    public int compareTo(ComparableObject<N, O> co) {
+        return this.number.compareTo(co.number);
     }
 
     /**
