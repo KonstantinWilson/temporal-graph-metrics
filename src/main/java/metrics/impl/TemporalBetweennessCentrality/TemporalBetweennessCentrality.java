@@ -7,9 +7,11 @@ import metrics.impl.HopCount.RecursiveAction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
+import org.gradoop.temporal.model.impl.pojo.TemporalElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalVertex;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 public class TemporalBetweennessCentrality implements IMetric<Double> {
     private GradoopId vertexId;
     private List<TemporalVertex> vertices;
-    private Double result = null;
+    private DiagramV2<Long, Double> result = null;
 
     /**
      * Constructor of TemporalBetweennessCentrality
@@ -61,7 +63,15 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
             }
         }
 
-        result = new Double(f1 * f2);
+        // Search the smallest ValidFrom time
+        Long start = edges.stream().min(Comparator.comparing(TemporalElement::getValidFrom)).orElse(new TemporalEdge()).getValidFrom();
+        // Search the biggest ValidTo time
+        Long end = edges.stream().max(Comparator.comparing(TemporalElement::getValidTo)).orElse(new TemporalEdge()).getValidTo();
+
+        result = new DiagramV2<>(null);
+        if (start != null) {
+            result.insertMin(start, end, f1 * f2);
+        }
     }
 
     /**
@@ -72,13 +82,13 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
      * @return Touple with two Long. The first number is the amount of shortest paths not traversing through vertexId. The second number is the amount of shortest paths traversing through vertexId.
      */
     private Tuple2<Long, Long> determine(List<TemporalEdge> edges, GradoopId startId, GradoopId endId) {
-        Tuple2<Long, Long> frac = new Tuple2<>(new Long(0), new Long(0));
+        Tuple2<Long, Long> fraction = new Tuple2<>(0L, 0L);
 
         Stack<StackItem<TemporalEdge>> stack = new Stack<>();
         Stack<TemporalEdge> path = new Stack<>();
         Stack<GradoopId> edgePath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
-        stack.push(new StackItem<TemporalEdge>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
+        stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
         path.push(stack.peek().next());
         edgePath.push(path.peek().getSourceId());
         edgePath.push(path.peek().getTargetId());
@@ -95,10 +105,10 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                 if (path.peek().getTargetId().equals(endId)) {
                     // Found result
                     if (edgePath.contains(this.vertexId)) {
-                        frac.f0++;
+                        fraction.f0++;
                     }
                     else {
-                        frac.f1++;
+                        fraction.f1++;
                     }
 
                     path.pop();
@@ -116,8 +126,7 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                                     && e.getValidTo() > from
                                     && !edgePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
-                    /*System.out.println("nextSteps.size() = " + nextSteps.size());
-                    System.out.println("lastId = " + lastEdge.getTargetId());*/
+
                     if (nextSteps == null || nextSteps.size() <= 0) {
                         path.pop();
                         edgePath.pop();
@@ -159,18 +168,11 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                 }
             }
         }
-        return frac;
+        return fraction;
     }
 
     @Override
     public DiagramV2<Long, Double> getData() {
-        if (result == null) {
-            return null;
-        }
-        else {
-            DiagramV2 diagram = new DiagramV2(null);
-            diagram.insertMin(0, 1, result);
-            return  diagram;
-        }
+        return result;
     }
 }
