@@ -1,6 +1,6 @@
 package processor;
 
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import metrics.api.IMetric;
 import org.apache.flink.api.java.DataSet;
 import org.gradoop.temporal.model.impl.TemporalGraph;
@@ -54,9 +54,9 @@ public class TemporalGraphProcessor<T extends IMetric> {
 
     /**
      * Returns the data/result of the processed metric.
-     * @return metric result as DiagramV2
+     * @return metric result as Diagram
      */
-    public DiagramV2 getData() {
+    public Diagram getData() {
         return metric.getData();
     }
 }

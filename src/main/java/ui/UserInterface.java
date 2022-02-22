@@ -1,6 +1,6 @@
 package ui;
 
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import export.ImageExporter;
 import importing.CSVImporter;
 import importing.TestDataImporter;
@@ -11,7 +11,6 @@ import metrics.impl.TemporalBetweennessCentrality.TemporalBetweennessCentrality;
 import metrics.impl.TemporalConnectedness.TemporalConnectedness;
 import metrics.impl.TemporalShortestPath.TemporalShortestPath;
 import org.apache.commons.cli.*;
-import org.gradoop.temporal.model.impl.TemporalGraph;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 import org.gradoop.temporal.model.impl.pojo.TemporalVertex;
 import processor.TemporalGraphProcessor;
@@ -103,9 +102,9 @@ public class UserInterface {
 
     /**
      * Gets the processed result.
-     * @return result as DiagramV2
+     * @return result as Diagram
      */
-    public DiagramV2 getData() {
+    public Diagram getData() {
         return processor.getData();
     }
 
@@ -182,7 +181,7 @@ public class UserInterface {
         System.out.println("Processing graph/metric ...");
         ui.process();
 
-        DiagramV2 result = ui.getData();
+        Diagram result = ui.getData();
         if (result != null) {
             System.out.println("The result has " + result.getData().size() + " entries.");
             System.out.println(result.getData());

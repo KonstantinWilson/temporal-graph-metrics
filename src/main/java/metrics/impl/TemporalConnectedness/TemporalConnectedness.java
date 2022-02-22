@@ -1,7 +1,7 @@
 package metrics.impl.TemporalConnectedness;
 
 import basics.StackItem;
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
 import org.gradoop.common.model.impl.id.GradoopId;
@@ -20,7 +20,7 @@ public class TemporalConnectedness implements IMetric<Short> {
     private GradoopId startId;
     private GradoopId endId;
     private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
-    private DiagramV2<Long, Short> diagram = new DiagramV2<Long, Short>((short)0);
+    private Diagram<Long, Short> diagram = new Diagram<Long, Short>((short)0);
 
     /**
      * Constructor of TemporalConnectedness
@@ -43,7 +43,7 @@ public class TemporalConnectedness implements IMetric<Short> {
     }
 
     @Override
-    public DiagramV2<Long, Short> getData() {
+    public Diagram<Long, Short> getData() {
         return this.diagram;
     }
 

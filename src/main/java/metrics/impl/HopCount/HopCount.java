@@ -1,7 +1,7 @@
 package metrics.impl.HopCount;
 
 import basics.StackItem;
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import metrics.api.IMetric;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
@@ -18,7 +18,7 @@ public class HopCount implements IMetric<Integer> {
     private GradoopId startId;
     private GradoopId endId;
     private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
-    private DiagramV2<Long, Integer> diagram = new DiagramV2<>(null);
+    private Diagram<Long, Integer> diagram = new Diagram<>(null);
 
     /**
      * Constructor of Hop Count
@@ -38,12 +38,12 @@ public class HopCount implements IMetric<Integer> {
 
     @Override
     public void calculate(List<TemporalEdge> edges) {
-        this.diagram = new DiagramV2<>(null);
+        this.diagram = new Diagram<>(null);
         determine(edges);
     }
 
     @Override
-    public DiagramV2<Long, Integer> getData() {
+    public Diagram<Long, Integer> getData() {
         return this.diagram;
     }
 

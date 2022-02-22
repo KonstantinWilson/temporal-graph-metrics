@@ -1,6 +1,6 @@
 package export;
 
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -52,10 +52,10 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
     }
 
     /**
-     * Renders a DiagramV2
+     * Renders a Diagram
      * @param diagram
      */
-    public void draw(DiagramV2<X, Y> diagram) {
+    public void draw(Diagram<X, Y> diagram) {
         this.image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         this.graphics = (Graphics2D)image.getGraphics();
         retrieveExtremes(diagram);
@@ -91,7 +91,7 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
      * Retrieves the lowest and highest values of the x and y axis of the diagram.
      * @param diagram
      */
-    private void retrieveExtremes(DiagramV2<X, Y> diagram) {
+    private void retrieveExtremes(Diagram<X, Y> diagram) {
         if (diagram == null || diagram.getData() == null || diagram.getData().size() == 0) {
             return;
         }
@@ -140,7 +140,7 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
      * Renders the content of the diagram.
      * @param diagram
      */
-    private void drawContent(DiagramV2<X, Y> diagram) {
+    private void drawContent(Diagram<X, Y> diagram) {
         double segmentSizeX = (double)maxContentX / (double)diagramWidth;
         double segmentSizeY = (double)maxContentY / (double)diagramHeight;
 
@@ -202,7 +202,7 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
      */
     public static void main(String[] args) {
         ImageExporter ie = new ImageExporter(512, 512, 16);
-        DiagramV2<Long, Integer> diagram = new DiagramV2(null);
+        Diagram<Long, Integer> diagram = new Diagram(null);
         diagram.insertMin(new Long(1),new Long(5), 1);
         diagram.insertMin(new Long(4),new Long(15), 3); // 4 -> 6, 3
         diagram.insertMin(new Long(8),new Long(23), 7);

@@ -1,7 +1,7 @@
 package metrics.impl.TemporalBetweennessCentrality;
 
 import basics.StackItem;
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class TemporalBetweennessCentrality implements IMetric<Double> {
     private GradoopId vertexId;
     private List<TemporalVertex> vertices;
-    private DiagramV2<Long, Double> result = null;
+    private Diagram<Long, Double> result = null;
 
     /**
      * Constructor of TemporalBetweennessCentrality
@@ -68,7 +68,7 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
         // Search the biggest ValidTo time
         Long end = edges.stream().max(Comparator.comparing(TemporalElement::getValidTo)).orElse(new TemporalEdge()).getValidTo();
 
-        result = new DiagramV2<>(null);
+        result = new Diagram<>(null);
         if (start != null) {
             result.insertMin(start, end, f1 * f2);
         }
@@ -172,7 +172,7 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
     }
 
     @Override
-    public DiagramV2<Long, Double> getData() {
+    public Diagram<Long, Double> getData() {
         return result;
     }
 }

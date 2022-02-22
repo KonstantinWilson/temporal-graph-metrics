@@ -1,6 +1,6 @@
 package metrics.api;
 
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 
 import java.util.List;
@@ -22,5 +22,5 @@ public interface IMetric<T extends /*Number &*/ Comparable> {
      * Returns the result of the metric.
      * @return Result as a Diagram
      */
-    public DiagramV2<Long, T> getData();
+    public Diagram<Long, T> getData();
 }

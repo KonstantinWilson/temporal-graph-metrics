@@ -8,15 +8,15 @@ import java.util.stream.Collectors;
  * @param <X> Time, has to be a comparable number.
  * @param <Y> Data, has to be comparable.
  */
-public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
+public class Diagram<X extends Number & Comparable, Y extends Comparable> {
     private TreeMap<X, Y> data;
     private Y defaultValue;
 
     /**
-     * Constructor for DiagramV2
+     * Constructor for Diagram
      * @param defaultValue Default value for points with no data.
      */
-    public DiagramV2(Y defaultValue) {
+    public Diagram(Y defaultValue) {
         data = new TreeMap<X, Y>();
         this.defaultValue = defaultValue;
     }
@@ -234,7 +234,7 @@ public class DiagramV2<X extends Number & Comparable, Y extends Comparable> {
      * @param args
      */
     public static void main(String[] args) {
-        DiagramV2<Long, Integer> diagram = new DiagramV2(null);
+        Diagram<Long, Integer> diagram = new Diagram(null);
 //        diagram.insertMin(new Long(1),new Long(5), 1);
 //        diagram.insertMin(new Long(4),new Long(15), 3); // 4 -> 6, 3
 //        diagram.insertMin(new Long(8),new Long(23), 7);

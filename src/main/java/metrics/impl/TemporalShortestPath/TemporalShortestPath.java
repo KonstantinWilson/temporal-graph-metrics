@@ -2,7 +2,7 @@ package metrics.impl.TemporalShortestPath;
 
 import basics.ComparableObject;
 import basics.StackItem;
-import basics.diagram.DiagramV2;
+import basics.diagram.Diagram;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -23,7 +23,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
     private GradoopId startId;
     private GradoopId endId;
     private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
-    private DiagramV2<Long, ComparableObject<Long, List<TemporalEdge>>> diagram = new DiagramV2<>(null);
+    private Diagram<Long, ComparableObject<Long, List<TemporalEdge>>> diagram = new Diagram<>(null);
 
     /**
      * Constructor of TemporalShortestPath
@@ -46,12 +46,12 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
 
     @Override
     public void calculate(List<TemporalEdge> edges) {
-        this.diagram = new DiagramV2<>(null);
+        this.diagram = new Diagram<>(null);
         determine(edges);
     }
 
     @Override
-    public DiagramV2<Long, ComparableObject<Long, List<TemporalEdge>>> getData() {
+    public Diagram<Long, ComparableObject<Long, List<TemporalEdge>>> getData() {
         return diagram;
     }
 
