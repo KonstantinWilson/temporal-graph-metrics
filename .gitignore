@@ -20,3 +20,6 @@ lib/*
 # Maven
 log/
 target/
+
+#Angular
+*/node_modules/*

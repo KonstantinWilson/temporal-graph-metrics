@@ -1,0 +1,47 @@
+<div class="filter-bar">
+	<mat-form-field>
+		<mat-label>Filter by Source Label</mat-label>
+		<mat-select [(ngModel)]="selectedVertex" (selectionChange)="onChangeSelection()">
+			<mat-option *ngFor="let vertex of vertices" [value]="vertex">{{ vertex.label }}</mat-option>
+		</mat-select>
+	</mat-form-field>
+
+	<mat-form-field>
+		<mat-label>Sort by</mat-label>
+		<mat-select [(ngModel)]="selectedSort" (selectionChange)="onChangeSelection()">
+			<mat-option value="label">Label</mat-option>
+			<mat-option value="validFrom">Valid From</mat-option>
+			<mat-option value="validTo">Valid To</mat-option>
+			<mat-option value="sourceLabel">Source Label</mat-option>
+			<mat-option value="Target Label">Target Label</mat-option>
+		</mat-select>
+	</mat-form-field>
+
+	<mat-form-field>
+		<mat-label>Metric</mat-label>
+		<mat-select [(ngModel)]="selectedMetric" (selectionChange)="onChangeSelection()">
+			<mat-option value="hc">Hop Count</mat-option>
+			<mat-option value="tc">Temporal Connectedness</mat-option>
+			<mat-option value="tsp">Temporal Shortest Path</mat-option>
+		</mat-select>
+	</mat-form-field>
+
+	<div class="stretch">
+	</div>
+
+	<button mat-raised-button (click)="onUndo()" [disabled]="edgePath.length <= 1">Undo</button>
+</div>
+
+<div class="main-container">
+	<div *ngFor="let step of edgePath; let i = index">
+		<div [ngClass]="{selected: step.selected === j}" *ngFor="let edge of step.edges; let j = index"
+			(click)="onClickEdge(i, edge)">
+			<div class="title">
+				<span>{{ edge.source.label }}</span> --{{ edge.label }}--> <span>{{ edge.target.label }}</span>
+			</div>
+			<div class="subtitle">
+				[{{ edge.validFrom }}, {{ edge.validTo }})
+			</div>
+		</div>
+	</div>
+</div>

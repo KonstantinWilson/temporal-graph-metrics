@@ -1,0 +1,62 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  > .filter-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    width: calc(100% - 2rem);
+    padding: 1rem;
+
+    > * {
+      margin-right: 1rem;
+    }
+    > *:last-child {
+      margin-right: 0;
+    }
+    > .stretch {
+      flex-grow: 1;
+    }
+  }
+
+  > .main-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+
+    > div {
+
+      > div {
+        padding: 1rem;
+        cursor: pointer;
+      }
+      > div:hover {
+        background-color: lightblue;
+      }
+    }
+  }
+}
+
+.selected {
+	background-color: lighten($color: lightblue, $amount: 8);
+}
+
+.title {
+  font-size: 10pt;
+
+  > span {
+    font-size: 14pt;
+    font-weight: bold;
+  }
+}
+.subtitle {
+  font-size: 10pt;
+
+  > span {
+    font-size: 14pt;
+    font-weight: bold;
+  }
+}
