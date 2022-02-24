@@ -37,9 +37,9 @@ public class TemporalShortestPathTest {
         assertEquals("Y at X=14 should be 6.", new Long(6), data.get(14L).getNumber());
         assertEquals("Y at X=17 should be 4.", new Long(4), data.get(17L).getNumber());
         assertEquals("Y at X=21 should be 10.", new Long(10), data.get(21L).getNumber());
-        assertNull("Y at X=27 should be null.", data.get(27L));
+        assertTrue("Y at X=27 should exist and be null.", data.containsKey(27L) && data.get(27L) == null);
         assertEquals("Y at X=39 should be 2.", new Long(2), data.get(39L).getNumber());
-        assertNull("Y at X=41 should be null.", data.get(41L));
+        assertTrue("Y at X=41 should exist and be null.", data.containsKey(41L) && data.get(41L) == null);
     }
 
     @Test
@@ -59,12 +59,17 @@ public class TemporalShortestPathTest {
         assertEquals("Y at X=27 should be 1.", new Long(1), data.get(27L).getNumber());
         assertEquals("Y at X=28 should be 12.", new Long(12), data.get(28L).getNumber());
         assertEquals("Y at X=34 should be 19.", new Long(19), data.get(34L).getNumber());
-        assertNull("Y at X=36 should be null.", data.get(41L));
+        assertTrue("Y at X=36 should exist and be null.", data.containsKey(36L) && data.get(36L) == null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalid() {
+    public void testInvalidSimilar() {
         new TemporalShortestPath(getVertex("E").getId(), getVertex("E").getId());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidNull() {
+        new TemporalShortestPath(getVertex("E").getId(), null);
     }
 
     private TemporalVertex getVertex(String label) {

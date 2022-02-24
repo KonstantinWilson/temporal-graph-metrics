@@ -1,6 +1,7 @@
 package metrics.impl.TemporalBetweennessCentrality;
 
 import importing.TestDataImporter;
+import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 import org.gradoop.temporal.model.impl.pojo.TemporalVertex;
 import org.junit.Before;
@@ -23,13 +24,26 @@ public class TemporalBetweennessCentralityTest {
         vertices = importer.getVertices();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidNonExisting() {
+        new TemporalBetweennessCentrality(vertices, new GradoopId());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidVerticesNull() {
+        new TemporalBetweennessCentrality(null, getVertex("E").getId());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidVertexIdNull() {
+        new TemporalBetweennessCentrality(vertices, null);
+    }
+
     @Test
     public void testA() {
         TemporalBetweennessCentrality temporalBetweennessCentrality = new TemporalBetweennessCentrality(vertices, getVertex("A").getId());
         temporalBetweennessCentrality.calculate(edges);
         TreeMap<Long, Double> data = temporalBetweennessCentrality.getData().getData();
-
-        System.out.println(data);
 
         int expectedSize = 2;
         assertEquals("Size is " + data.size() + " but should be " + expectedSize + ".", expectedSize, data.size());
@@ -38,12 +52,11 @@ public class TemporalBetweennessCentralityTest {
         TemporalEdge ceilEdge = edges.stream().reduce((a, b) -> a.getValidTo() > b.getValidFrom() ? a : b).orElse(null);
         assert floorEdge != null;
         assert ceilEdge != null;
-        System.out.println("Floor: " + floorEdge.getValidFrom());
 
         double expected = 0.40689866083635423;
         double actual = data.get(floorEdge.getValidFrom());
         assertTrue("Y at X=" + floorEdge.getValidFrom() + " should be " + expected + " but is " + actual + ".", Math.abs(expected - actual) < THRESHOLD);
-        assertNull("Y at X=36 should be null.", data.get(ceilEdge.getValidTo()));
+        assertTrue("Y at X=" + ceilEdge.getValidTo() + " should exist and be null.", data.containsKey(ceilEdge.getValidTo()) && data.get(ceilEdge.getValidTo()) == null);
     }
 
     @Test
@@ -52,8 +65,6 @@ public class TemporalBetweennessCentralityTest {
         temporalBetweennessCentrality.calculate(edges);
         TreeMap<Long, Double> data = temporalBetweennessCentrality.getData().getData();
 
-        System.out.println(data);
-
         int expectedSize = 2;
         assertEquals("Size is " + data.size() + " but should be " + expectedSize + ".", expectedSize, data.size());
 
@@ -61,12 +72,11 @@ public class TemporalBetweennessCentralityTest {
         TemporalEdge ceilEdge = edges.stream().reduce((a, b) -> a.getValidTo() > b.getValidFrom() ? a : b).orElse(null);
         assert floorEdge != null;
         assert ceilEdge != null;
-        System.out.println("Floor: " + floorEdge.getValidFrom());
 
         double expected = 0.031236124986124984;
         double actual = data.get(floorEdge.getValidFrom());
         assertTrue("Y at X=" + floorEdge.getValidFrom() + " should be " + expected + " but is " + actual + ".", Math.abs(expected - actual) < THRESHOLD);
-        assertNull("Y at X=36 should be null.", data.get(ceilEdge.getValidTo()));
+        assertTrue("Y at X=" + ceilEdge.getValidTo() + " should exist and be null.", data.containsKey(ceilEdge.getValidTo()) && data.get(ceilEdge.getValidTo()) == null);
     }
 
     private TemporalVertex getVertex(String label) {

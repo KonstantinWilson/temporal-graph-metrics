@@ -26,6 +26,13 @@ public class HopCount implements IMetric<Integer> {
      * @param endId Id of the destination vertex.
      */
     public HopCount(GradoopId startId, GradoopId endId) {
+        if (startId == null || endId == null) {
+            throw new IllegalArgumentException("Id can't be null.");
+        }
+        if (startId.equals(endId)) {
+            throw new IllegalArgumentException("StartId and EndId can't be the same.");
+        }
+
         this.startId = startId;
         this.endId = endId;
     }

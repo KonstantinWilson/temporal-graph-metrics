@@ -32,6 +32,12 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
      * @param vertexId Id of vertex, for which the metric shall be determined.
      */
     public TemporalBetweennessCentrality(List<TemporalVertex> vertices, GradoopId vertexId) {
+        if (vertexId == null || vertices == null) {
+            throw new IllegalArgumentException("Arguments can't be null.");
+        }
+        if (vertices.stream().noneMatch(v -> v.getId().equals(vertexId))) {
+            throw new IllegalArgumentException("VertexId doesn't exist in the given list of vertices.");
+        }
         this.vertices = vertices;
         this.vertexId = vertexId;
     }

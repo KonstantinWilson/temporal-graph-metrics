@@ -31,8 +31,11 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
      * @param endId Id of the destination vertex
      */
     public TemporalShortestPath(GradoopId startId, GradoopId endId) {
+        if (startId == null || endId == null) {
+            throw new IllegalArgumentException("Id can't be null.");
+        }
         if (startId.equals(endId)) {
-            throw new IllegalArgumentException("Start and end id cannot be the same.");
+            throw new IllegalArgumentException("StartId and EndId can't be the same.");
         }
 
         this.startId = startId;
