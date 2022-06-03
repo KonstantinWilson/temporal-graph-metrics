@@ -2,11 +2,16 @@ package metrics.impl.HopCount;
 
 import basics.StackItem;
 import basics.diagram.Diagram;
+import export.CSVExporter;
+import importing.TestDataImporter;
 import metrics.api.IMetric;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
+import org.gradoop.common.model.impl.pojo.EPGMElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -15,9 +20,9 @@ import java.util.stream.Collectors;
  * The Hop Count is the lowest amount of hops to travel from a vertex j to another vertex k.
  */
 public class HopCount implements IMetric<Integer> {
-    private GradoopId startId;
-    private GradoopId endId;
-    private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
+    private final GradoopId startId;
+    private final GradoopId endId;
+    private final ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
     private Diagram<Long, Integer> diagram = new Diagram<>(null);
 
     /**
@@ -83,18 +88,12 @@ public class HopCount implements IMetric<Integer> {
         Stack<TemporalEdge> path = new Stack<>();
         Stack<GradoopId> edgePath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
-        stack.push(new StackItem<TemporalEdge>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
+        stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
         path.push(stack.peek().next());
         edgePath.push(path.peek().getSourceId());
         edgePath.push(path.peek().getTargetId());
 
-        int lastIndex = -1;
-        int firstSize = stack.peek().size();
         while (stack.size() > 0) {
-            if (stack.size() == 1) {
-                lastIndex = stack.peek().getIndex();
-            }
-
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
                 if (path.peek().getTargetId().equals(endId)) {
                     Tuple2<Long, Long> trimmed = trim(path);
@@ -118,7 +117,7 @@ public class HopCount implements IMetric<Integer> {
                             && !edgePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
 
-                    if (nextSteps == null || nextSteps.size() <= 0) {
+                    if (nextSteps.size() <= 0) {
                         path.pop();
                         edgePath.pop();
                         TemporalEdge next = stack.peek().next();
@@ -150,7 +149,6 @@ public class HopCount implements IMetric<Integer> {
                 TemporalEdge next = stack.peek().next();
                 if (next == null) {
                     stack.pop();
-                    action = RecursiveAction.WENT_BACK;
                 }
                 else {
                     path.push(next);
@@ -169,20 +167,68 @@ public class HopCount implements IMetric<Integer> {
     private Tuple2<Long, Long> trim(Stack<TemporalEdge> stack) {
         long start = 0, end = 0;
         boolean init = true;
-        Iterator<TemporalEdge> it = stack.iterator();
-        while (it.hasNext()) {
-            TemporalEdge next = it.next();
+        for (TemporalEdge next : stack) {
             if (init) {
                 start = next.getValidFrom();
                 end = next.getValidTo();
                 init = false;
-            }
-            else {
+            } else {
                 start = Math.max(start, next.getValidFrom());
                 end = Math.min(end, next.getValidTo());
             }
         }
 
         return new Tuple2<>(start, end);
+    }
+
+    public static void main(String[] args) {
+        TestDataImporter importer = new TestDataImporter();
+        List<String> vertexLabels = importer.getVertices().stream().map(EPGMElement::getLabel).sorted().collect(Collectors.toList());
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String input = null;
+        do {
+            System.out.print("Please choose the origin vertex from the list " + vertexLabels + ": ");
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String originInput = input;
+
+        input = null;
+        do {
+            System.out.print("Please choose the destination vertex from the list " + vertexLabels + ": ");
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String destinationInput = input;
+
+        HopCount metric = new HopCount(
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(originInput)).findFirst().get().getId(),
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(destinationInput)).findFirst().get().getId()
+        );
+        metric.calculate(importer.getEdges());
+        System.out.println(metric.getData().getData());
+        CSVExporter exporter = new CSVExporter("HopCount.csv");
+        try {
+            exporter.save(metric.getData());
+        }
+        catch (Exception e) {
+            System.out.println("Error saving csv-file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

@@ -2,15 +2,19 @@ package metrics.impl.TemporalBetweennessCentrality;
 
 import basics.StackItem;
 import basics.diagram.Diagram;
+import export.CSVExporter;
+import importing.TestDataImporter;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
+import org.gradoop.common.model.impl.pojo.EPGMElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 import org.gradoop.temporal.model.impl.pojo.TemporalElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalVertex;
 
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
@@ -22,9 +26,11 @@ import java.util.stream.Collectors;
  * TBC = 1 / ((amountOfVertices-1) * (amountOfVertices-2)) * SUM( (amountOfShortestPaths(j,k) / amountOfShortestPathsThroughVertex(j,k)d) )
  */
 public class TemporalBetweennessCentrality implements IMetric<Double> {
-    private GradoopId vertexId;
-    private List<TemporalVertex> vertices;
+    private final GradoopId vertexId;
+    private final List<TemporalVertex> vertices;
     private Diagram<Long, Double> result = null;
+    private final long from;
+    private final long to;
 
     /**
      * Constructor of TemporalBetweennessCentrality
@@ -32,6 +38,17 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
      * @param vertexId Id of vertex, for which the metric shall be determined.
      */
     public TemporalBetweennessCentrality(List<TemporalVertex> vertices, GradoopId vertexId) {
+        this(vertices, vertexId, -1, -1);
+    }
+
+    /**
+     * Constructor of TemporalBetweennessCentrality
+     * @param vertices All vertices of the graph.
+     * @param vertexId Id of vertex, for which the metric shall be determined.
+     * @param from Start of the time span of which the metric shall be calculated. Set -1 to not specify a start.
+     * @param to End of the time span of which the metric shall be calculated. Set -1 to not specify an end.
+     */
+    public TemporalBetweennessCentrality(List<TemporalVertex> vertices, GradoopId vertexId, long from, long to) {
         if (vertexId == null || vertices == null) {
             throw new IllegalArgumentException("Arguments can't be null.");
         }
@@ -40,6 +57,8 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
         }
         this.vertices = vertices;
         this.vertexId = vertexId;
+        this.from = from;
+        this.to = to;
     }
 
     @Override
@@ -50,6 +69,14 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
     // 1 / ((N-1)*(N-2)) * SUMME(Anzahl kürzester Pfade/Anzahl kürzester Pfade durch Knoten)
     @Override
     public void calculate(List<TemporalEdge> edges) {
+        List<TemporalEdge> affectedEdges;
+        if (from < 0 && to < 0) {
+            affectedEdges = edges;
+        }
+        else {
+            affectedEdges = edges.stream().filter(e -> (from < 0 || e.getValidFrom() >= from) && (to < 0 || e.getValidTo() <= to)).collect(Collectors.toList());
+        }
+
         double f1 = 1 / ((double)(vertices.size() - 1) * (double)(vertices.size() - 2));
         double f2 = 0;
 
@@ -59,9 +86,7 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                         && !sourceVertex.getId().equals(vertexId)
                         && !targetVertex.getId().equals(vertexId)
                 ) {
-                    List<GradoopId> path = new ArrayList<>();
-                    path.add(sourceVertex.getId());
-                    Tuple2<Long, Long> result = determine(edges, sourceVertex.getId(), targetVertex.getId());
+                    Tuple2<Long, Long> result = determine(affectedEdges, sourceVertex.getId(), targetVertex.getId());
                     if (result.f1 != 0) {
                         f2 += result.f0.doubleValue() / result.f1.doubleValue();
                     }
@@ -70,9 +95,9 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
         }
 
         // Search the smallest ValidFrom time
-        Long start = edges.stream().min(Comparator.comparing(TemporalElement::getValidFrom)).orElse(new TemporalEdge()).getValidFrom();
+        Long start = affectedEdges.stream().min(Comparator.comparing(TemporalElement::getValidFrom)).orElse(new TemporalEdge()).getValidFrom();
         // Search the biggest ValidTo time
-        Long end = edges.stream().max(Comparator.comparing(TemporalElement::getValidTo)).orElse(new TemporalEdge()).getValidTo();
+        Long end = affectedEdges.stream().max(Comparator.comparing(TemporalElement::getValidTo)).orElse(new TemporalEdge()).getValidTo();
 
         result = new Diagram<>(null);
         if (start != null) {
@@ -95,27 +120,25 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
         Stack<GradoopId> edgePath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
         stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
+
+        if (stack.peek().current() == null) {
+            return fraction;
+        }
+
         path.push(stack.peek().next());
+
         edgePath.push(path.peek().getSourceId());
         edgePath.push(path.peek().getTargetId());
 
-        int lastIndex = -1;
-        int firstSize = stack.peek().size();
         while (stack.size() > 0) {
-            if (stack.size() == 1) {
-                lastIndex = stack.peek().getIndex();
-            }
-            System.out.print(lastIndex + "/" + firstSize  + " - " + stack.size() + "                                                                                \r");
-
+            // Falls in nächsten Rekursionsschritt
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
                 if (path.peek().getTargetId().equals(endId)) {
                     // Found result
                     if (edgePath.contains(this.vertexId)) {
                         fraction.f0++;
                     }
-                    else {
-                        fraction.f1++;
-                    }
+                    fraction.f1++;
 
                     path.pop();
                     edgePath.pop();
@@ -133,7 +156,7 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                                     && !edgePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
 
-                    if (nextSteps == null || nextSteps.size() <= 0) {
+                    if (nextSteps.size() <= 0) {
                         path.pop();
                         edgePath.pop();
                         TemporalEdge next = stack.peek().next();
@@ -165,7 +188,6 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
                 TemporalEdge next = stack.peek().next();
                 if (next == null) {
                     stack.pop();
-                    action = RecursiveAction.WENT_BACK;
                 }
                 else {
                     path.push(next);
@@ -180,5 +202,44 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
     @Override
     public Diagram<Long, Double> getData() {
         return result;
+    }
+
+    public static void main(String[] args) {
+        TestDataImporter importer = new TestDataImporter();
+        List<String> vertexLabels = importer.getVertices().stream().map(EPGMElement::getLabel).collect(Collectors.toList());
+        System.out.print("Please choose a vertex " + vertexLabels + ": ");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String input = null;
+        do {
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    System.out.print("Please choose a vertex from the list " + vertexLabels + ": ");
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String finalInput = input;
+
+        TemporalBetweennessCentrality metric = new TemporalBetweennessCentrality(
+                importer.getVertices(),
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(finalInput)).findFirst().get().getId(),
+                10 ,
+                -1
+        );
+        metric.calculate(importer.getEdges());
+        System.out.println(metric.getData().getData());
+        CSVExporter exporter = new CSVExporter("TemporalBetweennessCentrality.csv");
+        try {
+            exporter.save(metric.getData());
+        }
+        catch (Exception e) {
+            System.out.println("Error saving csv-file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

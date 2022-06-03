@@ -57,4 +57,13 @@ public class ComparableObject<N extends Number & Comparable, O extends Object> i
     public O getObject() {
         return this.object;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(this.number.toString())
+                .append(" (")
+                .append(this.object.toString())
+                .append(")");
+        return sb.toString();
+    }
 }

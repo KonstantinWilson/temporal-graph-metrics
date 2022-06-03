@@ -2,11 +2,16 @@ package metrics.impl.TemporalConnectedness;
 
 import basics.StackItem;
 import basics.diagram.Diagram;
+import export.CSVExporter;
+import importing.TestDataImporter;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
 import org.gradoop.common.model.impl.id.GradoopId;
+import org.gradoop.common.model.impl.pojo.EPGMElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -17,10 +22,10 @@ import java.util.stream.Collectors;
  * Two vertices j and k are Temporally Connected, if there is a path from j to k with no overlapping edges and one edge occurs before the next one.
  */
 public class TemporalConnectedness implements IMetric<Short> {
-    private GradoopId startId;
-    private GradoopId endId;
-    private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
-    private Diagram<Long, Short> diagram = new Diagram<Long, Short>((short)0);
+    private final GradoopId startId;
+    private final GradoopId endId;
+    private final ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
+    private final Diagram<Long, Short> diagram = new Diagram<>((short)0);
 
     /**
      * Constructor of TemporalConnectedness
@@ -40,7 +45,8 @@ public class TemporalConnectedness implements IMetric<Short> {
 
     @Override
     public void calculate(TemporalEdge edge) {
-
+        determine(selectRelevantEdges(edge));
+        oldEdges.add(edge);
     }
 
     @Override
@@ -55,7 +61,7 @@ public class TemporalConnectedness implements IMetric<Short> {
 
     /**
      * Selects edges that don't overlap with 'edge'.
-     * @param edge
+     * @param edge Edge to compare other edges to.
      * @return List of TemporalEdges
      */
     private List<TemporalEdge> selectRelevantEdges(TemporalEdge edge) {
@@ -69,9 +75,9 @@ public class TemporalConnectedness implements IMetric<Short> {
      * @param edges List of TemporalEdges
      */
     private void determine(List<TemporalEdge> edges) {
-        Stack<StackItem<TemporalEdge>> stack = new Stack();
-        Stack<TemporalEdge> path = new Stack();
-        Stack<GradoopId> vertexPath = new Stack();
+        Stack<StackItem<TemporalEdge>> stack = new Stack<>();
+        Stack<TemporalEdge> path = new Stack<>();
+        Stack<GradoopId> vertexPath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
         stack.push(new StackItem<>(
                 edges.stream().filter(e -> e.getSourceId().equals(this.startId)).collect(Collectors.toList()),
@@ -109,7 +115,7 @@ public class TemporalConnectedness implements IMetric<Short> {
                                     && !vertexPath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
 
-                    if (nextEdges == null || nextEdges.size() <= 0) {
+                    if (nextEdges.size() <= 0) {
                         path.pop();
                         vertexPath.pop();
                         TemporalEdge next = stack.peek().next();
@@ -141,7 +147,6 @@ public class TemporalConnectedness implements IMetric<Short> {
                 TemporalEdge next = stack.peek().next();
                 if (next == null) {
                     stack.pop();
-                    action = RecursiveAction.WENT_BACK;
                 }
                 else {
                     path.push(next);
@@ -149,6 +154,57 @@ public class TemporalConnectedness implements IMetric<Short> {
                     action = RecursiveAction.WENT_NEXT;
                 }
             }
+        }
+    }
+
+    public static void main(String[] args) {
+        TestDataImporter importer = new TestDataImporter();
+        List<String> vertexLabels = importer.getVertices().stream().map(EPGMElement::getLabel).sorted().collect(Collectors.toList());
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String input = null;
+        do {
+            System.out.print("Please choose the origin vertex from the list " + vertexLabels + ": ");
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String originInput = input;
+
+        input = null;
+        do {
+            System.out.print("Please choose the destination vertex from the list " + vertexLabels + ": ");
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String destinationInput = input;
+
+        TemporalConnectedness metric = new TemporalConnectedness(
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(originInput)).findFirst().get().getId(),
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(destinationInput)).findFirst().get().getId()
+        );
+        metric.calculate(importer.getEdges());
+        System.out.println(metric.getData().getData());
+        CSVExporter exporter = new CSVExporter("TemporalConnectedness.csv");
+        try {
+            exporter.save(metric.getData());
+        }
+        catch (Exception e) {
+            System.out.println("Error saving csv-file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

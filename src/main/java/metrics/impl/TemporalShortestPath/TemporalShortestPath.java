@@ -3,16 +3,19 @@ package metrics.impl.TemporalShortestPath;
 import basics.ComparableObject;
 import basics.StackItem;
 import basics.diagram.Diagram;
+import export.CSVExporter;
+import importing.TestDataImporter;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
+import metrics.impl.TemporalConnectedness.TemporalConnectedness;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
+import org.gradoop.common.model.impl.pojo.EPGMElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -20,9 +23,9 @@ import java.util.stream.Collectors;
  * The Temporal Shortest Path is the path with overlapping edges from on vertex to another with the shortest temporal length. The amount of hops is irellevant.
  */
 public class TemporalShortestPath implements IMetric<ComparableObject<Long, List<TemporalEdge>>> {
-    private GradoopId startId;
-    private GradoopId endId;
-    private ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
+    private final GradoopId startId;
+    private final GradoopId endId;
+    private final ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
     private Diagram<Long, ComparableObject<Long, List<TemporalEdge>>> diagram = new Diagram<>(null);
 
     /**
@@ -44,7 +47,8 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
 
     @Override
     public void calculate(TemporalEdge edge) {
-
+        determine(selectRelevantEdges(edge));
+        oldEdges.add(edge);
     }
 
     @Override
@@ -60,7 +64,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
 
     /**
      * Selects edges that overlap with 'edge'.
-     * @param edge
+     * @param edge Edge to compare other edges to.
      * @return List of TemporalEdges
      */
     private List<TemporalEdge> selectRelevantEdges(TemporalEdge edge) {
@@ -79,7 +83,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         Stack<TemporalEdge> path = new Stack<>();
         Stack<GradoopId> edgePath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
-        stack.push(new StackItem<TemporalEdge>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
+        stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
         path.push(stack.peek().next());
         edgePath.push(path.peek().getSourceId());
         edgePath.push(path.peek().getTargetId());
@@ -92,7 +96,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
                         diagram.insertMin(
                                 trimmed.f0,
                                 trimmed.f1,
-                                new ComparableObject<Long, List<TemporalEdge>>(trimmed.f1 - trimmed.f0, new ArrayList<TemporalEdge>(path))
+                                new ComparableObject<>(trimmed.f1 - trimmed.f0, new ArrayList<>(path))
                         );
                     }
 
@@ -112,7 +116,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
                                     && !edgePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
 
-                    if (nextSteps == null || nextSteps.size() <= 0) {
+                    if (nextSteps.size() <= 0) {
                         path.pop();
                         edgePath.pop();
                         TemporalEdge next = stack.peek().next();
@@ -144,7 +148,6 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
                 TemporalEdge next = stack.peek().next();
                 if (next == null) {
                     stack.pop();
-                    action = RecursiveAction.WENT_BACK;
                 }
                 else {
                     path.push(next);
@@ -163,20 +166,96 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
     private Tuple2<Long, Long> trim(Stack<TemporalEdge> stack) {
         long start = 0, end = 0;
         boolean init = true;
-        Iterator<TemporalEdge> it = stack.iterator();
-        while (it.hasNext()) {
-            TemporalEdge next = it.next();
+        for (TemporalEdge next : stack) {
             if (init) {
                 start = next.getValidFrom();
                 end = next.getValidTo();
                 init = false;
-            }
-            else {
+            } else {
                 start = Math.max(start, next.getValidFrom());
                 end = Math.min(end, next.getValidTo());
             }
         }
 
         return new Tuple2<>(start, end);
+    }
+
+    public static void main(String[] args) {
+        TestDataImporter importer = new TestDataImporter();
+        List<String> vertexLabels = importer.getVertices().stream().map(EPGMElement::getLabel).sorted().collect(Collectors.toList());
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String input = null;
+        do {
+            System.out.print("Please choose the origin vertex from the list " + vertexLabels + ": ");
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String originInput = input;
+
+        input = null;
+        do {
+            System.out.print("Please choose the destination vertex from the list " + vertexLabels + ": ");
+            try {
+                input = reader.readLine();
+                if (input == null || !vertexLabels.contains(input)) {
+                    input = null;
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        } while (input == null);
+        String destinationInput = input;
+
+        TemporalShortestPath metric = new TemporalShortestPath(
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(originInput)).findFirst().get().getId(),
+                importer.getVertices().stream().filter(v -> v.getLabel().equals(destinationInput)).findFirst().get().getId()
+        );
+        metric.calculate(importer.getEdges());
+
+        for (Map.Entry<Long, ComparableObject<Long, List<TemporalEdge>>> e: metric.getData().getData().entrySet()) {
+            StringBuilder sb = new StringBuilder()
+                    .append(e.getKey())
+                    .append("=");
+            if (e.getValue() == null) {
+                sb.append("null");
+            }
+            else {
+                sb.append(e.getValue().getNumber())
+                        .append(":")
+                        .append(e.getValue().getObject().stream().map(TemporalEdge::getLabel).collect(Collectors.toList()));
+            }
+            System.out.println(sb);
+        }
+
+        CSVExporter exporter = new CSVExporter("TemporalShortestPath.csv");
+        try {
+            ArrayList<Long> keys = new ArrayList(metric.getData().getData().keySet());
+            List<String> values = metric.getData().getData().entrySet().stream().map(e -> {
+                StringBuilder sb = new StringBuilder();
+                if (e.getValue() == null) {
+                    sb.append("null");
+                }
+                else {
+                    sb.append(e.getValue().getNumber())
+                            .append(" ")
+                            .append(e.getValue().getObject().stream().map(TemporalEdge::getLabel).collect(Collectors.toList()));
+                }
+                return sb.toString();
+            }).collect(Collectors.toList());
+            exporter.save(keys, values);
+        }
+        catch (Exception e) {
+            System.out.println("Error saving csv-file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
