@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * Importer for csv-files.
  */
-public class CSVImporter implements IImporter {
+public class BikeGraphLayout implements IImporter {
     public static final int TRIP_DURATION = 0;
     public static final int START_TIME = 1;
     public static final int STOP_TIME = 2;
@@ -247,7 +247,7 @@ public class CSVImporter implements IImporter {
         }
 
         Console.println("Loading file ...");
-        CSVImporter importer = new CSVImporter();
+        BikeGraphLayout importer = new BikeGraphLayout();
         importer.load(file);
         ArrayList<TemporalVertex> vertices = importer.getVertices();
         Console.println("Loaded " + vertices.size() + " vertices and " + importer.getEdges().size() + " edges.");

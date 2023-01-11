@@ -4,10 +4,10 @@ import basics.ComparableObject;
 import basics.StackItem;
 import basics.diagram.Diagram;
 import export.CSVExporter;
+import export.ImageExporter;
 import importing.TestDataImporter;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
-import metrics.impl.TemporalConnectedness.TemporalConnectedness;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.pojo.EPGMElement;
@@ -53,6 +53,8 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
 
     @Override
     public void calculate(List<TemporalEdge> edges) {
+        this.oldEdges.clear();
+        this.oldEdges.addAll(edges);
         this.diagram = new Diagram<>(null);
         determine(edges);
     }
@@ -83,7 +85,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         Stack<TemporalEdge> path = new Stack<>();
         Stack<GradoopId> edgePath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
-        stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
+        stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId) && !e.getTargetId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
         path.push(stack.peek().next());
         edgePath.push(path.peek().getSourceId());
         edgePath.push(path.peek().getTargetId());
@@ -237,6 +239,7 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
         }
 
         CSVExporter exporter = new CSVExporter("TemporalShortestPath.csv");
+        ImageExporter imgExporter = new ImageExporter(512,512, 16);
         try {
             ArrayList<Long> keys = new ArrayList(metric.getData().getData().keySet());
             List<String> values = metric.getData().getData().entrySet().stream().map(e -> {
@@ -252,6 +255,10 @@ public class TemporalShortestPath implements IMetric<ComparableObject<Long, List
                 return sb.toString();
             }).collect(Collectors.toList());
             exporter.save(keys, values);
+            imgExporter.draw(metric.getData());
+            if (!imgExporter.save("TemporalShortestPath.png", true)) {
+                System.out.println("Error saving png-file.");
+            }
         }
         catch (Exception e) {
             System.out.println("Error saving csv-file: " + e.getMessage());

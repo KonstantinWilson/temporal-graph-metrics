@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
  */
 public class Diagram<X extends Number & Comparable, Y extends Comparable> {
     private TreeMap<X, Y> data;
-    private Y defaultValue;
+    private final Y defaultValue;
 
     /**
      * Constructor for Diagram
@@ -59,7 +59,7 @@ public class Diagram<X extends Number & Comparable, Y extends Comparable> {
              */
             if (floorKeyFrom != null && floorKeyTo != null && floorKeyFrom.equals(floorKeyTo)) {
                 Y oldValue = data.get(floorKeyFrom);
-                if (newValue.compareTo(oldValue) < 0) {
+                if (oldValue == null || newValue.compareTo(oldValue) < 0) {
                     data.put(from, newValue);
                     data.put(to, oldValue);
                 }
@@ -145,7 +145,7 @@ public class Diagram<X extends Number & Comparable, Y extends Comparable> {
              */
             if (floorKeyFrom != null && floorKeyTo != null && floorKeyFrom.equals(floorKeyTo)) {
                 Y oldValue = data.get(floorKeyFrom);
-                if (newValue.compareTo(oldValue) > 0) {
+                if (oldValue == null || newValue.compareTo(oldValue) > 0) {
                     data.put(from, newValue);
                     data.put(to, oldValue);
                 }

@@ -1,5 +1,6 @@
 package export;
 
+import basics.ComparableObject;
 import basics.diagram.Diagram;
 
 import javax.imageio.ImageIO;
@@ -124,16 +125,16 @@ public class ImageExporter<X extends Number & Comparable, Y extends Number & Com
         graphics.drawLine(x(-8), y(maxY-8), x(0), y(maxY));
         graphics.drawLine(x(8), y(maxY-8), x(0), y(maxY));
         // Label Y
-        graphics.drawString(diagramYMax + "", x(-margin), y(maxContentY));
-        graphics.drawString(diagramYMin + "", x(-margin), y(0));
+        graphics.drawString(diagramYMax.doubleValue() + "", x(-margin), y(maxContentY));
+        graphics.drawString(diagramYMin.doubleValue() + "", x(-margin), y(0));
 
         // Arrow X
         graphics.drawLine(x(0), y(0), x(maxX), y(0));
         graphics.drawLine(x(maxX-8), y(8), x(maxX), y(0));
         graphics.drawLine(x(maxX-8), y(-8), x(maxX), y(0));
         // Label X
-        graphics.drawString(diagramXMax + "", x(maxContentX), y(-margin));
-        graphics.drawString(diagramXMin + "", x(0), y(-margin));
+        graphics.drawString(diagramXMax.doubleValue() + "", x(maxContentX), y(-margin));
+        graphics.drawString(diagramXMin.doubleValue() + "", x(0), y(-margin));
     }
 
     /**

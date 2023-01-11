@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * @param <N> Type of the key
  * @param <O> Type of the object
  */
-public class ComparableObject<N extends Number & Comparable, O extends Object> implements Comparable<ComparableObject<N, O>> {
+public class ComparableObject<N extends Number & Comparable, O extends Object> extends Number implements Comparable<ComparableObject<N, O>> {
     private N number;
     private O object;
 
@@ -65,5 +65,25 @@ public class ComparableObject<N extends Number & Comparable, O extends Object> i
                 .append(this.object.toString())
                 .append(")");
         return sb.toString();
+    }
+
+    @Override
+    public int intValue() {
+        return number.intValue();
+    }
+
+    @Override
+    public long longValue() {
+        return number.longValue();
+    }
+
+    @Override
+    public float floatValue() {
+        return number.floatValue();
+    }
+
+    @Override
+    public double doubleValue() {
+        return number.doubleValue();
     }
 }

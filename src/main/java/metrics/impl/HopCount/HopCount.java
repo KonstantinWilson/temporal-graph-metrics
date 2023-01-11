@@ -3,6 +3,7 @@ package metrics.impl.HopCount;
 import basics.StackItem;
 import basics.diagram.Diagram;
 import export.CSVExporter;
+import export.ImageExporter;
 import importing.TestDataImporter;
 import metrics.api.IMetric;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -51,6 +52,8 @@ public class HopCount implements IMetric<Integer> {
     @Override
     public void calculate(List<TemporalEdge> edges) {
         this.diagram = new Diagram<>(null);
+        this.oldEdges.clear();
+        this.oldEdges.addAll(edges);
         determine(edges);
     }
 
@@ -76,7 +79,7 @@ public class HopCount implements IMetric<Integer> {
      * @return List of edges
      */
     private List<TemporalEdge> getEdgesBetween(Long start, Long end) {
-        return this.oldEdges.stream().filter(e -> e.getValidFrom() >= start && e.getValidTo() <= end).collect(Collectors.toList());
+        return this.oldEdges.stream().filter(e -> e.getValidFrom() < end && e.getValidTo() > start).collect(Collectors.toList());
     }
 
     /**
@@ -86,12 +89,12 @@ public class HopCount implements IMetric<Integer> {
     private void determine(List<TemporalEdge> edges) {
         Stack<StackItem<TemporalEdge>> stack = new Stack<>();
         Stack<TemporalEdge> path = new Stack<>();
-        Stack<GradoopId> edgePath = new Stack<>();
+        Stack<GradoopId> nodePath = new Stack<>();
         RecursiveAction action = RecursiveAction.WENT_DEEPER;
         stack.push(new StackItem<>(edges.stream().filter(e -> e.getSourceId().equals(startId)).collect(Collectors.toList()), Long.MIN_VALUE, Long.MAX_VALUE));
         path.push(stack.peek().next());
-        edgePath.push(path.peek().getSourceId());
-        edgePath.push(path.peek().getTargetId());
+        nodePath.push(path.peek().getSourceId());
+        nodePath.push(path.peek().getTargetId());
 
         while (stack.size() > 0) {
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
@@ -102,7 +105,7 @@ public class HopCount implements IMetric<Integer> {
                     }
 
                     path.pop();
-                    edgePath.pop();
+                    nodePath.pop();
                     stack.pop();
                     action = RecursiveAction.WENT_BACK;
                 }
@@ -114,12 +117,12 @@ public class HopCount implements IMetric<Integer> {
                             e.getSourceId().equals(lastEdge.getTargetId())
                             && e.getValidFrom() < to
                             && e.getValidTo() > from
-                            && !edgePath.contains(e.getTargetId())
+                            && !nodePath.contains(e.getTargetId())
                     ).collect(Collectors.toList());
 
                     if (nextSteps.size() <= 0) {
                         path.pop();
-                        edgePath.pop();
+                        nodePath.pop();
                         TemporalEdge next = stack.peek().next();
                         if (next == null) {
                             stack.pop();
@@ -127,7 +130,7 @@ public class HopCount implements IMetric<Integer> {
                         }
                         else {
                             path.push(next);
-                            edgePath.push(path.peek().getTargetId());
+                            nodePath.push(path.peek().getTargetId());
                             action = RecursiveAction.WENT_NEXT;
                         }
                     }
@@ -138,21 +141,21 @@ public class HopCount implements IMetric<Integer> {
                                 to //Math.max(stack.peek().getPreviousTo(), path.peek().getValidTo())
                         ));
                         path.push(stack.peek().next());
-                        edgePath.push(path.peek().getTargetId());
+                        nodePath.push(path.peek().getTargetId());
                         action = RecursiveAction.WENT_DEEPER;
                     }
                 }
             }
             else if (action == RecursiveAction.WENT_BACK) {
                 path.pop();
-                edgePath.pop();
+                nodePath.pop();
                 TemporalEdge next = stack.peek().next();
                 if (next == null) {
                     stack.pop();
                 }
                 else {
                     path.push(next);
-                    edgePath.push(path.peek().getTargetId());
+                    nodePath.push(path.peek().getTargetId());
                     action = RecursiveAction.WENT_NEXT;
                 }
             }
@@ -223,11 +226,16 @@ public class HopCount implements IMetric<Integer> {
         metric.calculate(importer.getEdges());
         System.out.println(metric.getData().getData());
         CSVExporter exporter = new CSVExporter("HopCount.csv");
+        ImageExporter imgExporter = new ImageExporter(512,512, 16);
         try {
             exporter.save(metric.getData());
+            imgExporter.draw(metric.getData());
+            if (!imgExporter.save("HopCount.png", true)) {
+                System.out.println("Error saving png-file.");
+            }
         }
         catch (Exception e) {
-            System.out.println("Error saving csv-file: " + e.getMessage());
+            System.out.println("Error saving file: " + e.getMessage());
             e.printStackTrace();
         }
     }

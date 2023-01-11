@@ -3,6 +3,7 @@ package metrics.impl.TemporalConnectedness;
 import basics.StackItem;
 import basics.diagram.Diagram;
 import export.CSVExporter;
+import export.ImageExporter;
 import importing.TestDataImporter;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
@@ -25,7 +26,7 @@ public class TemporalConnectedness implements IMetric<Short> {
     private final GradoopId startId;
     private final GradoopId endId;
     private final ArrayList<TemporalEdge> oldEdges = new ArrayList<>();
-    private final Diagram<Long, Short> diagram = new Diagram<>((short)0);
+    private Diagram<Long, Short> diagram = new Diagram<>((short)0);
 
     /**
      * Constructor of TemporalConnectedness
@@ -51,6 +52,9 @@ public class TemporalConnectedness implements IMetric<Short> {
 
     @Override
     public void calculate(List<TemporalEdge> edges) {
+        this.diagram = new Diagram((short)0);
+        this.oldEdges.clear();
+        this.oldEdges.addAll(edges);
         determine(edges);
     }
 
@@ -88,16 +92,7 @@ public class TemporalConnectedness implements IMetric<Short> {
         vertexPath.push(path.peek().getSourceId());
         vertexPath.push(path.peek().getTargetId());
 
-        int lastIndex = -1;
-        int firstSize = stack.peek().size();
-
         while (stack.size() > 0) {
-
-            if (stack.size() == 1) {
-                lastIndex = stack.peek().getIndex();
-            }
-            System.out.print(lastIndex + "/" + firstSize  + " - " + stack.size() + "                                                                                \r");
-
             if (action == RecursiveAction.WENT_DEEPER || action == RecursiveAction.WENT_NEXT) {
                 if (path.peek().getTargetId().equals(endId)) {
                     diagram.insertMax(path.get(0).getValidFrom(), path.peek().getValidTo(), (short)1);
@@ -199,11 +194,16 @@ public class TemporalConnectedness implements IMetric<Short> {
         metric.calculate(importer.getEdges());
         System.out.println(metric.getData().getData());
         CSVExporter exporter = new CSVExporter("TemporalConnectedness.csv");
+        ImageExporter imgExporter = new ImageExporter(512,512, 16);
         try {
             exporter.save(metric.getData());
+            imgExporter.draw(metric.getData());
+            if (!imgExporter.save("TemporalConnectedness.png", true)) {
+                System.out.println("Error saving png-file.");
+            }
         }
         catch (Exception e) {
-            System.out.println("Error saving csv-file: " + e.getMessage());
+            System.out.println("Error saving file: " + e.getMessage());
             e.printStackTrace();
         }
     }

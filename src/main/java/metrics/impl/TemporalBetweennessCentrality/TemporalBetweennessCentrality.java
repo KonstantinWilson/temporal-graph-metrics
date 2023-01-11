@@ -3,6 +3,7 @@ package metrics.impl.TemporalBetweennessCentrality;
 import basics.StackItem;
 import basics.diagram.Diagram;
 import export.CSVExporter;
+import export.ImageExporter;
 import importing.TestDataImporter;
 import metrics.api.IMetric;
 import metrics.impl.HopCount.RecursiveAction;
@@ -234,11 +235,16 @@ public class TemporalBetweennessCentrality implements IMetric<Double> {
         metric.calculate(importer.getEdges());
         System.out.println(metric.getData().getData());
         CSVExporter exporter = new CSVExporter("TemporalBetweennessCentrality.csv");
+        ImageExporter imgExporter = new ImageExporter(512,512, 16);
         try {
             exporter.save(metric.getData());
+            imgExporter.draw(metric.getData());
+            if (!imgExporter.save("TemporalBetweennesCentrality.png", true)) {
+                System.out.println("Error saving png-file.");
+            }
         }
         catch (Exception e) {
-            System.out.println("Error saving csv-file: " + e.getMessage());
+            System.out.println("Error saving csv: " + e.getMessage());
             e.printStackTrace();
         }
     }
