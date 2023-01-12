@@ -47,9 +47,6 @@ public class TimeMeasure {
                 System.out.println(filepath + " took " + result.f0 + " nanoseconds and returned " + result.f1 + " results.");
             }
         }
-
-        HopCount metric = new HopCount(null, null);
-        metric.calculate(new ArrayList<TemporalEdge>());
     }
 
     private Tuple2<Long, Integer> measureHopCount(GradoopId sourceId, GradoopId targetId, List<TemporalEdge> edges) {
@@ -100,9 +97,9 @@ public class TimeMeasure {
                 {10, 500},
                 {10, 1000},
                 {10, 5000},
-                {10, 10000},
-                {10, 50000},
-                {10, 100000}
+                //{10, 10000},
+                //{10, 50000},
+                //{10, 100000}
         };
 
         TimeMeasure tm = new TimeMeasure("testgraphs/[NODES]nodes[EDGES]edges.csv", pairs);

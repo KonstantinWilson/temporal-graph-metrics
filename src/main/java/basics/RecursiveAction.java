@@ -1,4 +1,4 @@
-package metrics.impl.HopCount;
+package basics;
 
 /**
  * Helper-enum to implement recursion iterativelly.

@@ -1,5 +1,6 @@
 package metrics.impl.HopCount;
 
+import basics.RecursiveAction;
 import basics.StackItem;
 import basics.diagram.Diagram;
 import export.CSVExporter;

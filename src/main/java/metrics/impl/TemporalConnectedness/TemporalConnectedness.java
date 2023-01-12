@@ -6,7 +6,7 @@ import export.CSVExporter;
 import export.ImageExporter;
 import importing.TestDataImporter;
 import metrics.api.IMetric;
-import metrics.impl.HopCount.RecursiveAction;
+import basics.RecursiveAction;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.pojo.EPGMElement;
 import org.gradoop.temporal.model.impl.pojo.TemporalEdge;
